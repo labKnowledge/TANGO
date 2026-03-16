@@ -22,9 +22,7 @@ COPY Bin /var/bin
 RUN npm install pnpm -g
 RUN ls /var
 RUN rm -rf /var/client/node_modules
-RUN rm -rf /var/client/package-lock.json
 RUN rm -rf /var/server/node_modules
-RUN rm -rf /var/server/package-lock.json
 WORKDIR /var/server
 RUN npm install
 RUN npm run build
