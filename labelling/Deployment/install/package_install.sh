@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 chmod 644 /etc/my.cnf
 #chmod 644 /docker-entrypoint-initdb.d/*.sql
@@ -21,11 +22,6 @@ rm -f /var/lib/mysql/ib_logfile0
 mkdir /var/run/mysqld
 chown mysql:root /var/run/mysqld
 
-# install nodejs
-apt-get install curl -y
-curl -sL https://deb.nodesource.com/setup_14.x | bash -
-apt-get install nodejs -y
-
 # install wget
 apt-get install -y wget
 
@@ -37,7 +33,6 @@ cp /var/app/config/nginx.conf /etc/nginx/nginx.conf
 # install pg
 apt-get install libpq-dev -y
 
-
 # install python
 apt-get install python3.8-dev -y
 rm -f /usr/bin/python
@@ -45,13 +40,17 @@ ln -s /usr/bin/python3.8 /usr/bin/python
 apt-get install python3-pip -y
 python -m pip install --upgrade pip
 apt-get install git -y
+apt-get install -y build-essential
+apt-get install -y libssl-dev libffi-dev pkg-config
 apt-get install -y musl-dev
 ln -s /usr/lib/x86_64-linux-musl/libc.so /lib/libc.musl-x86_64.so.1
 apt-get install -y libsm6 libxext6 libxrender-dev libgl1-mesa-glx libglib2.0-0
 
-cat /var/app/config/requirement.txt | while read line
+while IFS= read -r line
 do
-  pip install $line
-done
-pip install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
+  if [ -z "$line" ] || [ "${line#\#}" != "$line" ]; then
+    continue
+  fi
+  pip install "$line"
+done < /var/app/config/requirement.txt
 pip install MarkupSafe==2.0.1
