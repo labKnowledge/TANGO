@@ -43,6 +43,10 @@ RUN cp -R /var/client/dist/* /var/release/Client
 RUN cp -R /var/model/* /var/release/Model
 
 
+# node runtime
+FROM node:14-bullseye AS node_runtime
+
+
 
 # -------------------------------------------------------------------
 # BUILD
@@ -81,9 +85,16 @@ COPY Deployment/db/*.sql /docker-entrypoint-initdb.d/
 
 # copy server
 COPY --from=weda_build /var/release /var/app/
+COPY --from=node_runtime /usr/local/bin/node /usr/local/bin/node
+COPY --from=node_runtime /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -sf ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
+    ln -sf ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 
 # copy bin
 COPY Deployment/bin /var/app/bin
+
+WORKDIR /var/app/Server
+RUN npm rebuild node-expat --build-from-source
 
 RUN pip install pysimdjson
 
